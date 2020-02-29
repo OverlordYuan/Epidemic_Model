@@ -8,27 +8,29 @@ require('openxlsx')
 
 ###读取上一次数据
 print("read lasted data")
-setwd("..")#获取当前路径
+setwd(".")#获取当前路径
 #setwd("data/R0_data")#设置R0数据路径
 R0path = paste(getwd(),"data/R0_data", sep = "/")#获取R0数据路径
 print(R0path)#输出R0数据路径
 day = Sys.Date()#获取当天日期
 #获取前一天R0数据文件名称
 file_name = paste("R0",paste(format(day-1,format="%Y%m%d"),"xlsx", sep = "."),sep="-")
-print(file_name)
+print(paste(R0path,file_name, sep = "/"))
 wb = read_excel(na="NA",path=paste(R0path,file_name, sep = "/"),sheet = 1)
 wb2 =  read_excel(na="NA",path=paste(R0path,file_name, sep = "/"),sheet = 2)
 #read.xls(",sheet=1,na.strings=c("NA","#DIV/0!"))
 #读取每日更新数据
+begin = 1
+end = 10
 print("read daily updated data")
 Ipath = paste(getwd(),"data/I_data", sep = "/")#获取每日更新数据路径
 I_file_name = paste("2019-nCoV",paste(format(day,format="%Y%m%d"),"xlsx", sep = "."),sep="-")
 filepath = paste(Ipath,I_file_name, sep = "/")
 wuhan = read_excel(path=filepath,sheet=1,na="NA")
-wuhan_data = tail(wuhan,10)
-hubei_data = tail(read_excel(path=filepath,sheet=2,na="NA")[10],10)
+wuhan_data = tail(wuhan,end)
+hubei_data = tail(read_excel(path=filepath,sheet=2,na="NA")[10],end)
 hubei_no_wuhan = hubei_data-wuhan_data[5]
-china_data = tail(read_excel(path=filepath,sheet=3,na="NA")[12],10)
+china_data = tail(read_excel(path=filepath,sheet=3,na="NA")[12],end)
 china_no_hubei = china_data-hubei_data
 wuhan_up_data = wuhan_data[5]
 #names(wuhan_up_data) = tail(wuhan[1],10)
@@ -48,17 +50,17 @@ print("loading ML method")
 t_seq = as.Date(as.character(wuhan_data[[1]]))
 for(v in vals){
   if(v==1){
-    c = est.R0.ML(as.double(wuhan_up_data[[1]]),mGT,t=1:length(t_seq),begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.ML(as.double(wuhan_up_data[[1]]),mGT,t=1:length(t_seq),begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0ml=append(r0ml,c$R)
     r0ml=append(r0ml,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0ml=append(r0ml,(c$conf.int[2]-c$conf.int[1])/2)
   } else if(v==2){
-    c = est.R0.ML(as.double(hubei_no_wuhan[[1]]),mGT,t=1:length(t_seq),begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.ML(as.double(hubei_no_wuhan[[1]]),mGT,t=1:length(t_seq),begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0ml=append(r0ml,c$R)
     r0ml=append(r0ml,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0ml=append(r0ml,(c$conf.int[2]-c$conf.int[1])/2)
   }else if (v==3){
-    c = est.R0.ML(as.double(china_no_hubei[[1]]),mGT,t=1:length(t_seq), begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.ML(as.double(china_no_hubei[[1]]),mGT,t=1:length(t_seq), begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0ml=append(r0ml,c$R)
     r0ml=append(r0ml,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0ml=append(r0ml,(c$conf.int[2]-c$conf.int[1])/2)
@@ -69,17 +71,17 @@ for(v in vals){
 print("loading EG method")
 for(v in vals){
   if(v==1){
-    c = est.R0.EG(as.double(wuhan_up_data[[1]]),mGT,t=1:10,begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.EG(as.double(wuhan_up_data[[1]]),mGT,t=1:10,begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0eg=append(r0eg,c$R)
     r0eg=append(r0eg,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0eg=append(r0eg,(c$conf.int[2]-c$conf.int[1])/2)
   } else if(v==2){
-    c = est.R0.EG(as.double(hubei_no_wuhan[[1]]),mGT,t=1:10,begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.EG(as.double(hubei_no_wuhan[[1]]),mGT,t=1:10,begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0eg=append(r0eg,c$R)
     r0eg=append(r0eg,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0eg=append(r0eg,(c$conf.int[2]-c$conf.int[1])/2)
   }else if (v==3){
-    c = est.R0.EG(as.double(china_no_hubei[[1]]),mGT,t=1:length(t_seq),begin=1,end=10,date.first.obs=firstdate, time.step=1)
+    c = est.R0.EG(as.double(china_no_hubei[[1]]),mGT,t=1:length(t_seq),begin=1,end=end,date.first.obs=firstdate, time.step=1)
     r0eg=append(r0eg,c$R)
     r0eg=append(r0eg,paste(c$conf.int[2],"-",c$conf.int[1]))
     r0eg=append(r0eg,(c$conf.int[2]-c$conf.int[1])/2)
@@ -103,5 +105,7 @@ bothdfs2 <- rbind(wb2,df_r0eg)
 print("saving xlsx file with 2 sheets")
 list_of_datasets <- list("R0 ML" = bothdfs1, "R0 EG" = bothdfs2)
 #print(list_of_datasets)
-write.xlsx(list_of_datasets, file ='D:/pro/Epidemic_Model/data/R0_data/writeXLSX_new.xlsx')
-print(2)
+file_name = paste("R0",paste(format(day,format="%Y%m%d"),"xlsx", sep = "."),sep="-")
+write.xlsx(list_of_datasets, file =paste(R0path,file_name, sep = "/"))
+print("数据保存成功")
+
